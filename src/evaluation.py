@@ -11,11 +11,12 @@ from sklearn.metrics import (
     f1_score, 
     roc_auc_score,
     confusion_matrix,
-    classification_report
+    classification_report,
+    matthews_corrcoef
 )
 from scipy.stats import wilcoxon
 
-from .config import SIGNIFICANCE_LEVEL
+from .config import SIGNIFICANCE_LEVEL, METRICS
 
 
 def compute_metrics(y_true: np.ndarray, 
@@ -64,6 +65,10 @@ def compute_metrics(y_true: np.ndarray,
     
     # Accuracy
     metrics['accuracy'] = np.mean(y_true == y_pred)
+    
+    # Matthews Correlation Coefficient (MCC)
+    # Most reliable metric for imbalanced binary classification
+    metrics['mcc'] = matthews_corrcoef(y_true, y_pred)
     
     return metrics
 
@@ -257,13 +262,13 @@ def compare_pipelines(metrics_a: MetricsAggregator,
     Args:
         metrics_a: Metrics aggregator for pipeline A (baseline)
         metrics_b: Metrics aggregator for pipeline B (proposed)
-        metric_names: List of metrics to compare (default: all)
+        metric_names: List of metrics to compare (default: from config)
         
     Returns:
         Dictionary of metric names to comparison results
     """
     if metric_names is None:
-        metric_names = ['precision', 'recall', 'f1', 'auc_roc']
+        metric_names = METRICS
     
     comparison = {}
     
@@ -308,11 +313,11 @@ def format_results_table(summary_a: Dict,
         Formatted string table
     """
     lines = []
-    lines.append("=" * 80)
+    lines.append("=" * 90)
     lines.append(f"{'Metric':<15} {pipeline_a_name:^25} {pipeline_b_name:^25} {'p-value':>10}")
-    lines.append("-" * 80)
+    lines.append("-" * 90)
     
-    for metric in ['precision', 'recall', 'f1', 'auc_roc']:
+    for metric in METRICS:
         if metric in summary_a and metric in summary_b:
             mean_a = summary_a[metric]['mean']
             std_a = summary_a[metric]['std']
@@ -327,7 +332,7 @@ def format_results_table(summary_a: Dict,
                 f"{mean_b:.4f} +/- {std_b:.4f}       {p_value:.4f}{sig}"
             )
     
-    lines.append("=" * 80)
+    lines.append("=" * 90)
     lines.append("* indicates statistically significant difference (p < 0.05)")
     
     return "\n".join(lines)
@@ -364,7 +369,9 @@ if __name__ == "__main__":
             'precision': 0.65 + np.random.random() * 0.1,
             'recall': 0.60 + np.random.random() * 0.1,
             'f1': 0.62 + np.random.random() * 0.1,
-            'auc_roc': 0.70 + np.random.random() * 0.1
+            'auc_roc': 0.70 + np.random.random() * 0.1,
+            'mcc': 0.30 + np.random.random() * 0.1,
+            'accuracy': 0.80 + np.random.random() * 0.1
         })
         
         # Simulate proposed metrics (slightly better)
@@ -372,7 +379,9 @@ if __name__ == "__main__":
             'precision': 0.72 + np.random.random() * 0.1,
             'recall': 0.68 + np.random.random() * 0.1,
             'f1': 0.70 + np.random.random() * 0.1,
-            'auc_roc': 0.78 + np.random.random() * 0.1
+            'auc_roc': 0.78 + np.random.random() * 0.1,
+            'mcc': 0.42 + np.random.random() * 0.1,
+            'accuracy': 0.85 + np.random.random() * 0.1
         })
     
     summary_a = agg_a.get_summary()

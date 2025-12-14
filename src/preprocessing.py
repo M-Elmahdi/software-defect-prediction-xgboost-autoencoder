@@ -10,9 +10,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import StratifiedKFold
 from sklearn.neighbors import NearestNeighbors
 
+from sklearn.model_selection import train_test_split
+
 from .config import (
     RANDOM_SEED, CV_FOLDS, CV_SHUFFLE,
-    SMOTE_K_NEIGHBORS, SMOTE_SAMPLING_STRATEGY
+    SMOTE_K_NEIGHBORS, SMOTE_SAMPLING_STRATEGY,
+    TEST_SIZE, USE_HOLDOUT_SPLIT
 )
 
 
@@ -183,6 +186,25 @@ class Preprocessor:
         return self.transform(X)
 
 
+def get_holdout_split(X: np.ndarray,
+                      y: np.ndarray,
+                      test_size: float = TEST_SIZE,
+                      random_state: int = RANDOM_SEED) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Generate a single stratified train/test split (70/30 as per SPAM-XAI paper).
+    
+    Args:
+        X: Feature array
+        y: Label array
+        test_size: Proportion of data for test set (default 0.30)
+        random_state: Random seed
+        
+    Returns:
+        X_train, X_test, y_train, y_test
+    """
+    return train_test_split(X, y, test_size=test_size, stratify=y, random_state=random_state)
+
+
 def get_cv_splits(X: np.ndarray, 
                   y: np.ndarray, 
                   n_splits: int = CV_FOLDS,
@@ -205,6 +227,34 @@ def get_cv_splits(X: np.ndarray,
     
     for train_idx, test_idx in cv.split(X, y):
         yield train_idx, test_idx
+
+
+def get_data_splits(X: np.ndarray,
+                    y: np.ndarray,
+                    use_holdout: bool = USE_HOLDOUT_SPLIT,
+                    random_state: int = RANDOM_SEED) -> Generator:
+    """
+    Get data splits based on configuration (either holdout or CV).
+    
+    Args:
+        X: Feature array
+        y: Label array
+        use_holdout: If True, use single 70/30 split. If False, use 10-fold CV.
+        random_state: Random seed
+        
+    Yields:
+        (train_idx, test_idx) tuples
+    """
+    if use_holdout:
+        # Single 70/30 stratified split (paper's methodology)
+        indices = np.arange(len(X))
+        train_idx, test_idx = train_test_split(
+            indices, test_size=TEST_SIZE, stratify=y, random_state=random_state
+        )
+        yield train_idx, test_idx
+    else:
+        # 10-fold stratified cross-validation
+        yield from get_cv_splits(X, y, random_state=random_state)
 
 
 def preprocess_fold(X_train: np.ndarray, 

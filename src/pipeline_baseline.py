@@ -16,7 +16,10 @@ from .config import (
     MLP_SOLVER,
     MLP_ALPHA,
     MLP_LEARNING_RATE,
+    MLP_LEARNING_RATE_INIT,
     MLP_MAX_ITER,
+    MLP_MOMENTUM,
+    MLP_EPSILON,
     MLP_EARLY_STOPPING,
     MLP_VALIDATION_FRACTION
 )
@@ -45,14 +48,17 @@ class BaselinePipeline:
         # PCA for dimensionality reduction
         self.pca = PCA(n_components=PCA_N_COMPONENTS, random_state=random_state)
         
-        # MLP classifier
+        # MLP classifier - configured to match SPAM-XAI paper parameters
         self.mlp = MLPClassifier(
             hidden_layer_sizes=MLP_HIDDEN_LAYERS,
             activation=MLP_ACTIVATION,
             solver=MLP_SOLVER,
             alpha=MLP_ALPHA,
             learning_rate=MLP_LEARNING_RATE,
+            learning_rate_init=MLP_LEARNING_RATE_INIT,
             max_iter=MLP_MAX_ITER,
+            momentum=MLP_MOMENTUM,
+            epsilon=MLP_EPSILON,
             early_stopping=MLP_EARLY_STOPPING,
             validation_fraction=MLP_VALIDATION_FRACTION,
             random_state=random_state
