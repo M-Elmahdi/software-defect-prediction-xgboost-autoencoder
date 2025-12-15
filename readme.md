@@ -4,8 +4,8 @@
 
 This document describes the implementation of the thesis methodology comparing two software defect prediction pipelines:
 
-- **Pipeline A (Baseline SPAM-XAI):** SMOTE + PCA + MLP + LIME
-- **Pipeline B (Proposed):** SMOTE + Autoencoder + XGBoost + LIME
+- **Pipeline A:** SMOTE + PCA + MLP + LIME
+- **Pipeline B:** SMOTE + Autoencoder + XGBoost + LIME
 
 The implementation follows Chapter 4 of the thesis methodology and evaluates both approaches on NASA PROMISE datasets (CM1, PC1, PC2) using 10 repetitions × 10-fold stratified cross-validation (100 paired observations per dataset) for statistically robust results.
 
